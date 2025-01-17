@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test 6 Logical Programming </title>
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            fetch('json files/logical programming.json') // Path to your JSON file
+                .then(response => response.json())
+                .then(data => {
+                    const randomQuestions = getRandomQuestions(data.questions, 10);
+                    renderQuiz(randomQuestions);
+                })
+                .catch(error => console.error("Error loading questions:", error));
+        });
+
+        // Get random N questions from the dataset
+        function getRandomQuestions(questions, count) {
+            const shuffled = [...questions].sort(() => Math.random() - 0.5);
+            return shuffled.slice(0, count);
+        }
+
+        // Render the quiz dynamically
+        function renderQuiz(questions) {
+            const form = document.querySelector("form");
+            form.innerHTML = ""; // Clear the form content
+
+            questions.forEach((question, index) => {
+                const questionDiv = document.createElement("div");
+                questionDiv.dataset.question = index;
+
+                const questionText = document.createElement("p");
+                questionText.textContent = `${index + 1}. ${question.text}`;
+                questionDiv.appendChild(questionText);
+
+                question.options.forEach((option, optionIndex) => {
+                    const label = document.createElement("label");
+                    label.innerHTML = `
+                        <input type="radio" name="question_${index}" value="${optionIndex}">
+                        ${String.fromCharCode(65 + optionIndex)}. ${option}
+                    `;
+                    questionDiv.appendChild(label);
+                    questionDiv.appendChild(document.createElement("br"));
+                });
+
+                form.appendChild(questionDiv);
+            });
+
+            const submitButton = document.createElement("button");
+            submitButton.type = "button";
+            submitButton.textContent = "Submit";
+            submitButton.onclick = () => submitTest(questions);
+            form.appendChild(submitButton);
+        }
+
+        // Handle quiz submission
+        function submitTest(questions) {
+            let score = 0;
+
+            questions.forEach((question, index) => {
+                const selectedOption = document.querySelector(`input[name="question_${index}"]:checked`);
+
+                if (selectedOption) {
+                    if (parseInt(selectedOption.value) === question.correct) {
+                        score++;
+                        selectedOption.parentElement.classList.add("correct");
+                    } else {
+                        selectedOption.parentElement.classList.add("incorrect");
+                    }
+                }
+
+                const correctOption = document.querySelector(`input[name="question_${index}"][value="${question.correct}"]`);
+                if (correctOption) {
+                    correctOption.parentElement.classList.add("answer-key");
+                }
+            });
+
+            // Update leaderboard
+            const username = localStorage.getItem('loggedInUser') || 'Guest';
+            const leaderboardData = JSON.parse(localStorage.getItem('leaderboardData')) || [];
+            leaderboardData.push({ username, score });
+            localStorage.setItem('leaderboardData', JSON.stringify(leaderboardData));
+
+            // Display the score summary
+            const summaryContainer = document.createElement("div");
+            summaryContainer.className = "summary-container";
+            summaryContainer.innerHTML = `
+                <h2>Quiz Summary</h2>
+                <p>Your Score: ${score}/${questions.length}</p>
+                <button onclick="location.reload()">Try Again</button>
+                <button onclick="window.location.href='leaderboard.html'">View Leaderboard</button>
+            `;
+            document.body.appendChild(summaryContainer);
+        }
+    </script>
+    <link rel="stylesheet" href="test.css">
+    <link rel="stylesheet" href="timer.css">
+    <script src="timer.js"></script>
+    <style>
+        .correct {
+            background-color: #d4edda; /* Light green */
+            color: #155724; /* Dark green */
+            font-weight: bold;
+        }
+
+        .incorrect {
+            background-color: #f8d7da; /* Light red */
+            color: #721c24; /* Dark red */
+            font-weight: bold;
+        }
+
+        .answer-key {
+            background-color: #cce5ff; /* Light blue */
+            color: #004085; /* Dark blue */
+            font-weight: bold;
+            text-decoration: underline;
+        }
+
+        .summary-container {
+            margin-top: 20px;
+            padding: 20px;
+            background-color: #f8f9fa; /* Light gray */
+            border: 1px solid #ced4da;
+            border-radius: 5px;
+            text-align: center;
+        }
+
+        .summary-container button {
+            margin-top: 10px;
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .summary-container button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Logical Programming </h1>
+    </header>
+    <div id="timer">03:00</div>
+    <main>
+        <form onsubmit="return false;">
+            <!-- Questions will be dynamically injected here -->
+        </form>
+    </main>
+    <footer>
+        <p>&copy; 2024 IQ Test Online. All rights reserved.</p>
+    </footer>
+</body>
+</html>
